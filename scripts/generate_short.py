@@ -109,7 +109,8 @@ Rules:
   "person counting cash close up", "luxury apartment interior morning",
   "businessman walking city street", "stock market graph screen glow",
   "coffee shop laptop working success", "sports car driving highway"
-  Never use generic terms like "money finance" or "business growth""""
+  Never use generic terms like "money finance" or "business growth"
+"""
 
     response = anthropic_client.messages.create(
         model="claude-opus-4-8",
