@@ -285,20 +285,25 @@ def assemble_video(
 
         # 5. Merge video + audio + burned-in subtitles → final output
         subtitle_style = "FontSize=22,PrimaryColour=&H00ffffff,BackColour=&H80000000,Bold=1,MarginV=120"
-        subprocess.run(
-            [
-                "ffmpeg", "-y",
-                "-i", str(trimmed),
-                "-i", str(audio_path),
-                "-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'",
-                "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-                "-c:a", "aac", "-b:a", "192k",
-                "-shortest",
-                "-movflags", "+faststart",
-                str(output_path),
-            ],
-            check=True, capture_output=True,
-        )
+        base_cmd = [
+            "ffmpeg", "-y",
+            "-i", str(trimmed),
+            "-i", str(audio_path),
+            "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+            "-c:a", "aac", "-b:a", "192k",
+            "-shortest", "-movflags", "+faststart",
+        ]
+        try:
+            subprocess.run(
+                base_cmd + ["-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'", str(output_path)],
+                check=True, capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"[warn] Subtitles failed ({e.returncode}), rendering without captions")
+            subprocess.run(
+                base_cmd + [str(output_path)],
+                check=True, capture_output=True,
+            )
 
     print(f"[video] Rendered: {output_path}")
     return output_path

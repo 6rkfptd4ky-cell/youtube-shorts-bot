@@ -30,6 +30,11 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Debug checkout
+        run: |
+          git log --oneline -1
+          grep -n "subtitles\|SRT\|drawtext" scripts/generate_short.py | head -5
+
       - name: Generate and upload Short
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
