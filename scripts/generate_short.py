@@ -314,9 +314,8 @@ def assemble_video(
 
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
         subtitle_style = (
-            "FontSize=26,PrimaryColour=&H00ffffff,OutlineColour=&H00000000,"
-            "BackColour=&HA0000000,Bold=1,MarginV=100,Outline=3,Shadow=1,"
-            "Alignment=2"
+            "FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+            "Bold=1,Outline=3,Shadow=1,MarginV=80,Alignment=2,BorderStyle=1"
         )
 
         inputs = ["-i", str(trimmed), "-i", str(audio_path)]
