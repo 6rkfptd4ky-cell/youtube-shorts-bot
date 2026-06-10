@@ -45,6 +45,41 @@ TOPIC_BANK = [
     "how to negotiate a raise in 30 seconds",
     "the 10% rule that changed my financial life",
     "why renting is not always throwing money away",
+    "what no one tells you about your 20s and money",
+    "the silent killer of your savings account",
+    "why broke people stay broke and rich people get richer",
+    "the biggest money mistake people make in their 30s",
+    "how rich people think about money differently",
+    "stop buying these 5 things if you want to be wealthy",
+    "the truth about passive income nobody talks about",
+    "why your job will never make you rich",
+    "how to build wealth on a low income",
+    "the money rule that changed everything for me",
+    "what banks don't want you to know",
+    "why most people retire broke",
+    "the fastest way to pay off debt",
+    "3 investments every beginner should know",
+    "why saving money is not enough",
+    "the psychology of why you overspend",
+    "what financial freedom actually looks like",
+    "how to make your money work while you sleep",
+    "the trap of lifestyle inflation",
+    "why the middle class is disappearing",
+    "how one decision can cost you $100k",
+    "the secret weapon of every millionaire",
+    "why budgeting apps are ruining your finances",
+    "what rich people never spend money on",
+    "the simple math that proves you can retire early",
+    "why your savings account is losing you money",
+    "how to turn $100 into real wealth",
+    "the spending habit that keeps 90% of people poor",
+    "what I wish I knew about money at 18",
+    "why financial advice from parents is outdated",
+    "the one number that controls your financial future",
+    "how to get a raise without asking",
+    "why living below your means is not about being cheap",
+    "the real reason you can not save money",
+    "what happens to your money when you sleep",
 ]
 
 SEARCH_TERMS = {
@@ -64,6 +99,18 @@ SEARCH_TERMS = {
 def pick_topic() -> str:
     """Generate a fresh topic with Claude, fallback to bank."""
     try:
+        angle = random.choice([
+            "a shocking truth most people don't know",
+            "a contrarian take that challenges common advice",
+            "a story-driven personal lesson",
+            "a step-by-step tactical tip",
+            "a myth-busting fact about money",
+            "a comparison between rich and poor mindsets",
+            "a warning about a common mistake",
+            "a motivational insight about building wealth",
+            "a specific number or rule that surprises people",
+            "a dark truth about the financial system",
+        ])
         response = anthropic_client.messages.create(
             model="claude-opus-4-8",
             max_tokens=200,
@@ -72,9 +119,11 @@ def pick_topic() -> str:
                 {
                     "role": "user",
                     "content": (
-                        "Generate ONE catchy YouTube Shorts title about personal finance or wealth habits. "
-                        "It should be under 60 characters, hook-driven, and suitable for a 45-60 second video. "
-                        "Reply with ONLY the title, nothing else."
+                        f"Generate ONE catchy YouTube Shorts title about personal finance or wealth. "
+                        f"The angle should be: {angle}. "
+                        f"It should be under 60 characters, hook-driven, and feel fresh and original. "
+                        f"Do NOT use titles starting with a number like '5 habits' or '3 things'. "
+                        f"Reply with ONLY the title, nothing else."
                     ),
                 }
             ],
@@ -90,7 +139,16 @@ def pick_topic() -> str:
 
 def generate_script(topic: str) -> dict:
     """Return {hook, body_lines, cta} for the video."""
+    style = random.choice([
+        "direct and punchy — short sentences, no fluff, feels urgent",
+        "storytelling — start with 'I' or 'most people', feels personal",
+        "myth-busting — challenge what the viewer believes, feel surprising",
+        "list-style — numbered points but conversational, not robotic",
+        "question-driven — open with a question, build curiosity throughout",
+    ])
     prompt = f"""Write a YouTube Shorts script for: "{topic}"
+Style: {style}
+
 
 Format your response as JSON with these exact keys:
 {{
