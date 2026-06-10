@@ -97,7 +97,7 @@ Format your response as JSON with these exact keys:
   "hook": "Opening line (under 10 words, extremely attention-grabbing)",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5"],
   "cta": "Closing call-to-action (under 10 words)",
-  "search_query": "2-3 word Pexels stock video search term"
+  "search_query": "Specific cinematic Pexels video search term (4-6 words, very visual and specific)"
 }}
 
 Rules:
@@ -105,7 +105,11 @@ Rules:
 - Plain English, no jargon
 - Each body line is one punchy sentence
 - The CTA tells viewers to follow/subscribe
-- search_query should be generic (e.g. "money finance", "business growth")"""
+- search_query must be SPECIFIC and VISUAL — not generic. Examples:
+  "person counting cash close up", "luxury apartment interior morning",
+  "businessman walking city street", "stock market graph screen glow",
+  "coffee shop laptop working success", "sports car driving highway"
+  Never use generic terms like "money finance" or "business growth""""
 
     response = anthropic_client.messages.create(
         model="claude-opus-4-8",
@@ -150,6 +154,19 @@ def get_audio_duration(audio_path: Path) -> float:
     )
     data = json.loads(result.stdout)
     return float(data["streams"][0]["duration"])
+
+
+def get_background_music() -> Path | None:
+    """Return a random music track from resources/music/ if any exist."""
+    music_dir = ROOT / "resources" / "music"
+    if not music_dir.exists():
+        return None
+    tracks = list(music_dir.glob("*.mp3")) + list(music_dir.glob("*.m4a"))
+    if not tracks:
+        return None
+    track = random.choice(tracks)
+    print(f"[music] Using: {track.name}")
+    return track
 
 
 def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Path]:
@@ -199,11 +216,21 @@ def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Pa
     return downloaded
 
 
+def wrap_caption(text: str, max_chars: int = 38) -> str:
+    """Split long captions into two lines for readability."""
+    if len(text) <= max_chars:
+        return text
+    words = text.split()
+    mid = len(words) // 2
+    return " ".join(words[:mid]) + "\n" + " ".join(words[mid:])
+
+
 def assemble_video(
     clips: list[Path],
     audio_path: Path,
     captions: list[str],
     output_path: Path,
+    music_path: Path | None = None,
 ) -> Path:
     """Stitch clips, overlay audio, burn captions. Output 9:16 vertical Short."""
     duration = get_audio_duration(audio_path)
@@ -264,7 +291,13 @@ def assemble_video(
             check=True, capture_output=True,
         )
 
-        # 4. Write SRT subtitle file (handles all special characters safely)
+        # 4. Write SRT subtitle file with wrapped lines
+        def fmt_time(s):
+            h = int(s // 3600)
+            m = int((s % 3600) // 60)
+            sec = s % 60
+            return f"{h:02d}:{m:02d}:{sec:06.3f}".replace(".", ",")
+
         n = len(captions)
         segment = duration / n
         srt_path = tmp_path / "captions.srt"
@@ -272,27 +305,39 @@ def assemble_video(
         for idx, line in enumerate(captions):
             start = idx * segment
             end = start + segment
-            def fmt(s):
-                h = int(s // 3600)
-                m = int((s % 3600) // 60)
-                sec = s % 60
-                return f"{h:02d}:{m:02d}:{sec:06.3f}".replace(".", ",")
             srt_lines.append(str(idx + 1))
-            srt_lines.append(f"{fmt(start)} --> {fmt(end)}")
-            srt_lines.append(line)
+            srt_lines.append(f"{fmt_time(start)} --> {fmt_time(end)}")
+            srt_lines.append(wrap_caption(line))
             srt_lines.append("")
         srt_path.write_text("\n".join(srt_lines))
 
-        # 5. Merge video + audio + burned-in subtitles → final output
-        subtitle_style = "FontSize=22,PrimaryColour=&H00ffffff,BackColour=&H80000000,Bold=1,MarginV=120"
-        base_cmd = [
-            "ffmpeg", "-y",
-            "-i", str(trimmed),
-            "-i", str(audio_path),
-            "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-            "-c:a", "aac", "-b:a", "192k",
-            "-shortest", "-movflags", "+faststart",
-        ]
+        # 5. Merge video + audio (+ optional music) + burned-in subtitles
+        subtitle_style = (
+            "FontSize=26,PrimaryColour=&H00ffffff,OutlineColour=&H00000000,"
+            "BackColour=&HA0000000,Bold=1,MarginV=100,Outline=3,Shadow=1,"
+            "Alignment=2"
+        )
+
+        inputs = ["-i", str(trimmed), "-i", str(audio_path)]
+        if music_path:
+            inputs += ["-i", str(music_path)]
+            # Mix voiceover (full volume) + music (15% volume), loop music
+            audio_filter = (
+                f"[2:a]volume=0.15,aloop=loop=-1:size=2000000000[mus];"
+                f"[1:a][mus]amix=inputs=2:duration=first[aout]"
+            )
+            audio_args = ["-filter_complex", audio_filter, "-map", "0:v", "-map", "[aout]"]
+        else:
+            audio_args = ["-map", "0:v", "-map", "1:a"]
+
+        base_cmd = (
+            ["ffmpeg", "-y"] + inputs + audio_args + [
+                "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+                "-c:a", "aac", "-b:a", "192k",
+                "-shortest", "-movflags", "+faststart",
+            ]
+        )
+
         try:
             subprocess.run(
                 base_cmd + ["-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'", str(output_path)],
@@ -388,8 +433,9 @@ def main():
         sys.exit(1)
 
     # 5. Assemble video
+    music = get_background_music()
     video_path = run_dir / "short.mp4"
-    assemble_video(clips, audio_path, captions, video_path)
+    assemble_video(clips, audio_path, captions, video_path, music_path=music)
 
     # 6. Upload to YouTube
     description = (
