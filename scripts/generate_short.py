@@ -272,8 +272,8 @@ def assemble_video(
         for idx, line in enumerate(captions):
             start = idx * segment
             end = start + segment
-            # Escape special chars for ffmpeg drawtext
-            safe = line.replace("'", "\\'").replace(":", "\\:").replace("\\", "\\\\")
+            # Escape special chars for ffmpeg drawtext (apostrophes must be removed)
+            safe = line.replace("\\", "\\\\").replace("'", "").replace(":", "\\:")
             drawtext_filters.append(
                 f"drawtext=text='{safe}'"
                 f":fontsize=52:fontcolor=white:fontfile=/System/Library/Fonts/Helvetica.ttc"
