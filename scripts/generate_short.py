@@ -159,7 +159,7 @@ def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Pa
     resp = requests.get(
         "https://api.pexels.com/videos/search",
         headers=headers,
-        params={"query": search_query, "per_page": 10, "min_duration": 3, "max_duration": 15},
+        params={"query": search_query, "per_page": 10, "page": random.randint(1, 5), "min_duration": 3, "max_duration": 15},
     )
     resp.raise_for_status()
     videos = resp.json().get("videos", [])
