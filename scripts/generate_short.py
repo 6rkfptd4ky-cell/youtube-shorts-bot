@@ -179,8 +179,8 @@ def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Pa
     for i, video in enumerate(videos[:6]):
         if total >= duration:
             break
-        # Prefer HD vertical or square clips
-        files = sorted(video["video_files"], key=lambda f: f.get("width", 0))
+        # Prefer highest resolution clip
+        files = sorted(video["video_files"], key=lambda f: f.get("width", 0), reverse=True)
         clip_url = files[0]["link"] if files else None
         if not clip_url:
             continue
@@ -222,7 +222,7 @@ def assemble_video(
                         "scale=1080:1920:force_original_aspect_ratio=increase,"
                         "crop=1080:1920"
                     ),
-                    "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                    "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-an", "-r", "30", str(out),
                 ],
                 check=True, capture_output=True,
@@ -291,7 +291,7 @@ def assemble_video(
                 "-i", str(trimmed),
                 "-i", str(audio_path),
                 "-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'",
-                "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+                "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                 "-c:a", "aac", "-b:a", "192k",
                 "-shortest",
                 "-movflags", "+faststart",
