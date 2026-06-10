@@ -32,7 +32,6 @@ jobs:
 
       - name: Patch font path for Linux
         run: |
-          # Replace macOS font path with Linux equivalent in script
           sed -i 's|/System/Library/Fonts/Helvetica.ttc|/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf|g' scripts/generate_short.py
 
       - name: Generate and upload Short

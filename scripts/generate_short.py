@@ -264,18 +264,17 @@ def assemble_video(
             check=True, capture_output=True,
         )
 
-        # 4. Build caption drawtext filter
-        # Spread captions evenly across the duration
+        # 4. Build caption drawtext filter using textfiles (avoids all escaping issues)
         n = len(captions)
         segment = duration / n
         drawtext_filters = []
         for idx, line in enumerate(captions):
             start = idx * segment
             end = start + segment
-            # Escape special chars for ffmpeg drawtext (apostrophes must be removed)
-            safe = line.replace("\\", "\\\\").replace("'", "").replace(":", "\\:")
+            cap_file = tmp_path / f"cap_{idx}.txt"
+            cap_file.write_text(line)
             drawtext_filters.append(
-                f"drawtext=text='{safe}'"
+                f"drawtext=textfile={cap_file}"
                 f":fontsize=52:fontcolor=white:fontfile=/System/Library/Fonts/Helvetica.ttc"
                 f":box=1:boxcolor=black@0.55:boxborderw=12"
                 f":x=(w-text_w)/2:y=h*0.78"
