@@ -264,32 +264,33 @@ def assemble_video(
             check=True, capture_output=True,
         )
 
-        # 4. Build caption drawtext filter using textfiles (avoids all escaping issues)
+        # 4. Write SRT subtitle file (handles all special characters safely)
         n = len(captions)
         segment = duration / n
-        drawtext_filters = []
+        srt_path = tmp_path / "captions.srt"
+        srt_lines = []
         for idx, line in enumerate(captions):
             start = idx * segment
             end = start + segment
-            cap_file = tmp_path / f"cap_{idx}.txt"
-            cap_file.write_text(line)
-            drawtext_filters.append(
-                f"drawtext=textfile={cap_file}"
-                f":fontsize=52:fontcolor=white:fontfile=/System/Library/Fonts/Helvetica.ttc"
-                f":box=1:boxcolor=black@0.55:boxborderw=12"
-                f":x=(w-text_w)/2:y=h*0.78"
-                f":enable='between(t,{start:.2f},{end:.2f})'"
-            )
+            def fmt(s):
+                h = int(s // 3600)
+                m = int((s % 3600) // 60)
+                sec = s % 60
+                return f"{h:02d}:{m:02d}:{sec:06.3f}".replace(".", ",")
+            srt_lines.append(str(idx + 1))
+            srt_lines.append(f"{fmt(start)} --> {fmt(end)}")
+            srt_lines.append(line)
+            srt_lines.append("")
+        srt_path.write_text("\n".join(srt_lines))
 
-        vf = ",".join(drawtext_filters)
-
-        # 5. Merge video + audio + captions → final output
+        # 5. Merge video + audio + burned-in subtitles → final output
+        subtitle_style = "FontSize=22,PrimaryColour=&H00ffffff,BackColour=&H80000000,Bold=1,MarginV=120"
         subprocess.run(
             [
                 "ffmpeg", "-y",
                 "-i", str(trimmed),
                 "-i", str(audio_path),
-                "-vf", vf,
+                "-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'",
                 "-c:v", "libx264", "-preset", "fast", "-crf", "20",
                 "-c:a", "aac", "-b:a", "192k",
                 "-shortest",
