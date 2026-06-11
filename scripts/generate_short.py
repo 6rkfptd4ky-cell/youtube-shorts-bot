@@ -139,34 +139,43 @@ def pick_topic() -> str:
 
 def generate_script(topic: str) -> dict:
     """Return {hook, body_lines, cta} for the video."""
-    style = random.choice([
-        "direct and punchy — short sentences, no fluff, feels urgent",
-        "storytelling — start with 'I' or 'most people', feels personal",
-        "myth-busting — challenge what the viewer believes, feel surprising",
-        "list-style — numbered points but conversational, not robotic",
-        "question-driven — open with a question, build curiosity throughout",
+    story_opener = random.choice([
+        "5 years ago I lost everything.",
+        "I made $100k in one month and still went broke.",
+        "At 24 I had $0 in my account and $40k in debt.",
+        "I watched my dad lose his house because of one mistake.",
+        "3 years ago I quit my job with $200 in my bank account.",
+        "I used to cry checking my bank balance.",
+        "My first investment wiped out my entire savings.",
+        "I was making $80k a year and still living paycheck to paycheck.",
+        "Nobody told me this about money when I was growing up.",
+        "The day I lost $50k taught me everything about wealth.",
     ])
     prompt = f"""Write a YouTube Shorts script for: "{topic}"
-Style: {style}
+
+Opening line (use this EXACTLY as the hook): "{story_opener}"
+
 
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "Opening line (under 10 words, extremely attention-grabbing)",
+  "hook": "The opening line provided above — use it word for word",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5"],
-  "cta": "Closing call-to-action (under 10 words)",
+  "cta": "Closing line that teases what they learned or tells them to follow",
   "search_query": "Specific cinematic Pexels video search term (4-6 words, very visual and specific)"
 }}
 
 Rules:
+- Write the body like a dramatic personal story being told out loud
+- Use "I", "me", "my" — first person throughout
+- Build tension — something went wrong, then the lesson hit
+- Short punchy sentences. Each line should make the viewer want to hear the next one
+- End with a lesson or revelation that feels earned, not preachy
 - Total spoken length: 45-60 seconds
-- Plain English, no jargon
-- Each body line is one punchy sentence
-- The CTA tells viewers to follow/subscribe
-- search_query must be SPECIFIC and VISUAL — not generic. Examples:
-  "person counting cash close up", "luxury apartment interior morning",
-  "businessman walking city street", "stock market graph screen glow",
-  "coffee shop laptop working success", "sports car driving highway"
+- No jargon, no lists, no "number one number two" format
+- search_query must be SPECIFIC and VISUAL — e.g. "person staring at empty wallet",
+  "stressed man at laptop late night", "luxury car driving empty road",
+  "businessman walking away from office building"
   Never use generic terms like "money finance" or "business growth"
 """
 
