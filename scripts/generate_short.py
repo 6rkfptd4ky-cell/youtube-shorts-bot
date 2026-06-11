@@ -215,6 +215,53 @@ def get_audio_duration(audio_path: Path) -> float:
     return float(data["streams"][0]["duration"])
 
 
+def fetch_photos(search_query: str, count: int, output_dir: Path) -> list[Path]:
+    """Download Pexels photos and convert to animated 3-second video clips."""
+    headers = {"Authorization": PEXELS_KEY}
+    try:
+        resp = requests.get(
+            "https://api.pexels.com/v1/search",
+            headers=headers,
+            params={"query": search_query, "per_page": 15, "page": random.randint(1, 3)},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        photos = resp.json().get("photos", [])
+    except Exception as e:
+        print(f"[photos] Fetch failed: {e}")
+        return []
+
+    clips = []
+    for i, photo in enumerate(random.sample(photos, min(count, len(photos)))):
+        photo_url = photo["src"].get("large2x") or photo["src"]["large"]
+        photo_path = output_dir / f"photo_{i}.jpg"
+        r = requests.get(photo_url, timeout=30)
+        photo_path.write_bytes(r.content)
+
+        clip_path = output_dir / f"photo_clip_{i}.mp4"
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    "-loop", "1", "-i", str(photo_path),
+                    "-vf", (
+                        "scale=1080:1920:force_original_aspect_ratio=increase,"
+                        "crop=1080:1920"
+                    ),
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+                    "-t", "3", "-pix_fmt", "yuv420p", "-r", "30", "-an",
+                    str(clip_path),
+                ],
+                check=True, capture_output=True, timeout=60,
+            )
+            clips.append(clip_path)
+            print(f"[photos] Clip {i+1} ready")
+        except Exception as e:
+            print(f"[photos] Failed clip {i}: {e}")
+
+    return clips
+
+
 def get_background_music() -> Path | None:
     """Return a random music track from resources/music/ if any exist."""
     music_dir = ROOT / "resources" / "music"
@@ -482,13 +529,22 @@ def main():
     duration = get_audio_duration(audio_path)
     print(f"[audio] Duration: {duration:.1f}s")
 
-    # 4. Download b-roll
+    # 4. Download b-roll (video clips + photos mixed)
     broll_dir = run_dir / "broll"
     broll_dir.mkdir()
-    clips = fetch_broll(search_q, duration, broll_dir)
+    video_clips = fetch_broll(search_q, duration, broll_dir)
+    photo_clips = fetch_photos(search_q, count=3, output_dir=broll_dir)
+
+    # Interleave photos between video clips for variety
+    clips = []
+    for i, vc in enumerate(video_clips):
+        clips.append(vc)
+        if i < len(photo_clips):
+            clips.append(photo_clips[i])
     if not clips:
-        print("[error] No b-roll clips downloaded. Aborting.")
+        print("[error] No clips downloaded. Aborting.")
         sys.exit(1)
+    random.shuffle(clips)
 
     # 5. Assemble video
     music = get_background_music()
