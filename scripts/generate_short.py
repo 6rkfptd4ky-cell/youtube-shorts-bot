@@ -211,6 +211,24 @@ def generate_voiceover(script: dict, output_path: Path) -> Path:
     return output_path
 
 
+def transcribe_audio(audio_path: Path) -> list[dict]:
+    """Get word-level timestamps using OpenAI Whisper."""
+    try:
+        with open(audio_path, "rb") as f:
+            result = openai_client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f,
+                response_format="verbose_json",
+                timestamp_granularities=["word"],
+            )
+        words = [{"word": w.word, "start": w.start, "end": w.end} for w in result.words]
+        print(f"[transcribe] Got {len(words)} word timestamps")
+        return words
+    except Exception as e:
+        print(f"[transcribe] Failed: {e}")
+        return []
+
+
 def get_audio_duration(audio_path: Path) -> float:
     """Get audio duration in seconds using ffprobe."""
     result = subprocess.run(
@@ -346,9 +364,11 @@ def assemble_video(
     captions: list[str],
     output_path: Path,
     music_path: Path | None = None,
+    word_timestamps: list[dict] | None = None,
 ) -> Path:
     """Stitch clips, overlay audio, burn captions. Output 9:16 vertical Short."""
     duration = get_audio_duration(audio_path)
+    word_timestamps = word_timestamps or []
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -406,37 +426,51 @@ def assemble_video(
             check=True, capture_output=True,
         )
 
-        # 4. Write SRT with word-chunk timing so captions follow the voice
+        # 4. Write SRT using real Whisper word timestamps
         def fmt_time(s):
             h = int(s // 3600)
             m = int((s % 3600) // 60)
             sec = s % 60
             return f"{h:02d}:{m:02d}:{sec:06.3f}".replace(".", ",")
 
-        # Split all caption text into 3-word chunks
-        all_words = " ".join(captions).split()
-        chunks = [" ".join(all_words[i:i+3]) for i in range(0, len(all_words), 3)]
-
-        # Time each chunk proportionally by word count (~2.7 words/sec)
         srt_path = tmp_path / "captions.srt"
+        words = word_timestamps  # passed in from main()
+
+        if words:
+            # Group into chunks of 3 words using actual timestamps
+            chunks = []
+            for i in range(0, len(words), 3):
+                group = words[i:i+3]
+                text = " ".join(w["word"].strip() for w in group)
+                start = group[0]["start"]
+                end = group[-1]["end"]
+                chunks.append((start, end, text))
+        else:
+            # Fallback: estimate timing by word count
+            all_words = " ".join(captions).split()
+            chunks = []
+            t = 0.0
+            for i in range(0, len(all_words), 3):
+                group = all_words[i:i+3]
+                text = " ".join(group)
+                chunk_dur = max(0.5, len(group) / 2.7)
+                end_t = min(t + chunk_dur, duration - 0.1)
+                chunks.append((t, end_t, text))
+                t = end_t
+
         srt_lines = []
-        t = 0.0
-        for idx, chunk in enumerate(chunks):
-            words = len(chunk.split())
-            chunk_dur = max(0.5, words / 2.7)
-            end_t = min(t + chunk_dur, duration - 0.1)
+        for idx, (start, end, text) in enumerate(chunks):
             srt_lines.append(str(idx + 1))
-            srt_lines.append(f"{fmt_time(t)} --> {fmt_time(end_t)}")
-            srt_lines.append(chunk)
+            srt_lines.append(f"{fmt_time(start)} --> {fmt_time(end)}")
+            srt_lines.append(text)
             srt_lines.append("")
-            t = end_t
         srt_path.write_text("\n".join(srt_lines))
 
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
-        # Red background box, white text, smaller font — viral Shorts style
+        # Yellow text, thick black outline — high readability viral Shorts style
         subtitle_style = (
-            "FontSize=16,PrimaryColour=&H00FFFFFF,BackColour=&H000000CC,"
-            "Bold=1,MarginV=90,Alignment=2,BorderStyle=3"
+            "FontSize=20,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,"
+            "Bold=1,Outline=3,Shadow=0,MarginV=90,Alignment=2,BorderStyle=1"
         )
 
         inputs = ["-i", str(trimmed), "-i", str(audio_path)]
@@ -539,11 +573,12 @@ def main():
     # Save script for reference
     (run_dir / "script.json").write_text(json.dumps(script, indent=2))
 
-    # 3. Generate voiceover
+    # 3. Generate voiceover + transcribe for word timestamps
     audio_path = run_dir / "voiceover.mp3"
     generate_voiceover(script, audio_path)
     duration = get_audio_duration(audio_path)
     print(f"[audio] Duration: {duration:.1f}s")
+    word_timestamps = transcribe_audio(audio_path)
 
     # 4. Download b-roll (video clips + photos mixed)
     broll_dir = run_dir / "broll"
@@ -565,7 +600,7 @@ def main():
     # 5. Assemble video
     music = get_background_music()
     video_path = run_dir / "short.mp4"
-    assemble_video(clips, audio_path, captions, video_path, music_path=music)
+    assemble_video(clips, audio_path, captions, video_path, music_path=music, word_timestamps=word_timestamps)
 
     # 6. Upload to YouTube
     description = (
