@@ -160,7 +160,7 @@ Opening line (use this EXACTLY as the hook): "{story_opener}"
 Format your response as JSON with these exact keys:
 {{
   "hook": "The opening line provided above — use it word for word",
-  "body": ["line 1", "line 2", "line 3", "line 4", "line 5"],
+  "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8"],
   "cta": "Closing line that teases what they learned or tells them to follow",
   "search_query": "Specific cinematic Pexels video search term (4-6 words, very visual and specific)"
 }}
@@ -171,7 +171,7 @@ Rules:
 - Build tension — something went wrong, then the lesson hit
 - Short punchy sentences. Each line should make the viewer want to hear the next one
 - End with a lesson or revelation that feels earned, not preachy
-- Total spoken length: 45-60 seconds
+- Total spoken length: 70-90 seconds
 - No jargon, no lists, no "number one number two" format
 - search_query must be SPECIFIC and VISUAL — e.g. "person staring at empty wallet",
   "stressed man at laptop late night", "luxury car driving empty road",
@@ -406,30 +406,37 @@ def assemble_video(
             check=True, capture_output=True,
         )
 
-        # 4. Write SRT subtitle file with wrapped lines
+        # 4. Write SRT with word-chunk timing so captions follow the voice
         def fmt_time(s):
             h = int(s // 3600)
             m = int((s % 3600) // 60)
             sec = s % 60
             return f"{h:02d}:{m:02d}:{sec:06.3f}".replace(".", ",")
 
-        n = len(captions)
-        segment = duration / n
+        # Split all caption text into 3-word chunks
+        all_words = " ".join(captions).split()
+        chunks = [" ".join(all_words[i:i+3]) for i in range(0, len(all_words), 3)]
+
+        # Time each chunk proportionally by word count (~2.7 words/sec)
         srt_path = tmp_path / "captions.srt"
         srt_lines = []
-        for idx, line in enumerate(captions):
-            start = idx * segment
-            end = start + segment
+        t = 0.0
+        for idx, chunk in enumerate(chunks):
+            words = len(chunk.split())
+            chunk_dur = max(0.5, words / 2.7)
+            end_t = min(t + chunk_dur, duration - 0.1)
             srt_lines.append(str(idx + 1))
-            srt_lines.append(f"{fmt_time(start)} --> {fmt_time(end)}")
-            srt_lines.append(wrap_caption(line))
+            srt_lines.append(f"{fmt_time(t)} --> {fmt_time(end_t)}")
+            srt_lines.append(chunk)
             srt_lines.append("")
+            t = end_t
         srt_path.write_text("\n".join(srt_lines))
 
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
+        # Red background box, white text, smaller font — viral Shorts style
         subtitle_style = (
-            "FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-            "Bold=1,Outline=3,Shadow=1,MarginV=80,Alignment=2,BorderStyle=1"
+            "FontSize=16,PrimaryColour=&H00FFFFFF,BackColour=&H000000CC,"
+            "Bold=1,MarginV=90,Alignment=2,BorderStyle=3"
         )
 
         inputs = ["-i", str(trimmed), "-i", str(audio_path)]
