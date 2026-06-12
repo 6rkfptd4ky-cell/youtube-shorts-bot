@@ -148,7 +148,7 @@ Rules:
 - Write like a narrator telling a gripping true story — third person is fine ("He had $0 left...")
 - Use real known facts about the person — do NOT invent quotes or false events
 - Build tension — show the low point, the turning moment, then the lesson
-- Short punchy sentences. Each one should make the viewer lean in for the next
+- Short punchy sentences ending with a period. Each one should make the viewer lean in for the next
 - End with a money lesson the viewer can apply to their own life
 - Total spoken length: 70-90 seconds
 - No jargon, no lists, no "number one number two" format
@@ -415,27 +415,29 @@ def assemble_video(
         srt_path = tmp_path / "captions.srt"
         words = word_timestamps  # passed in from main()
 
-        if words:
-            # Group into chunks of 3 words using actual timestamps
-            chunks = []
-            for i in range(0, len(words), 3):
-                group = words[i:i+3]
-                text = " ".join(w["word"].strip() for w in group)
-                start = group[0]["start"]
-                end = group[-1]["end"]
-                chunks.append((start, end, text))
-        else:
-            # Fallback: estimate timing by word count
-            all_words = " ".join(captions).split()
-            chunks = []
-            t = 0.0
-            for i in range(0, len(all_words), 3):
-                group = all_words[i:i+3]
-                text = " ".join(group)
-                chunk_dur = max(0.5, len(group) / 2.7)
-                end_t = min(t + chunk_dur, duration - 0.1)
-                chunks.append((t, end_t, text))
-                t = end_t
+        # One caption block per sentence, timed by Whisper word timestamps
+        chunks = []
+        word_idx = 0
+        for line in captions:
+            sentence_words = line.split()
+            n = len(sentence_words)
+            if not sentence_words:
+                continue
+            display = line.strip()
+            if not display.endswith((".", "!", "?")):
+                display += "."
+
+            if words and word_idx < len(words):
+                start = words[word_idx]["start"]
+                end_idx = min(word_idx + n - 1, len(words) - 1)
+                end = words[end_idx]["end"]
+            else:
+                # Fallback: estimate from word count
+                start = word_idx / 2.7
+                end = start + max(0.8, n / 2.7)
+
+            chunks.append((start, end, display))
+            word_idx += n
 
         srt_lines = []
         for idx, (start, end, text) in enumerate(chunks):
