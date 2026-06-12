@@ -2,10 +2,12 @@ name: Generate & Upload Daily Short
 
 on:
   schedule:
-    # 3 videos per day: 8 AM, 2 PM, 8 PM UTC
-    - cron: "0 8 * * *"
-    - cron: "0 14 * * *"
-    - cron: "0 20 * * *"
+    # 5 videos per day: 7 AM, 10 AM, 1 PM, 5 PM, 9 PM UTC
+    - cron: "0 7 * * *"
+    - cron: "0 10 * * *"
+    - cron: "0 13 * * *"
+    - cron: "0 17 * * *"
+    - cron: "0 21 * * *"
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
