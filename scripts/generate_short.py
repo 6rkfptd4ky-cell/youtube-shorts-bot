@@ -30,56 +30,36 @@ PEXELS_KEY = os.environ["PEXELS_API_KEY"]
 
 # ─── Topic bank (fallback if Claude doesn't generate a fresh one) ─────────────
 TOPIC_BANK = [
-    "5 money habits that keep you broke",
-    "the 50/30/20 rule explained in 60 seconds",
-    "why the latte factor is a lie",
-    "the real cost of a car payment",
-    "how compound interest makes you rich while you sleep",
-    "3 signs you're living above your means",
-    "why a high salary doesn't mean wealth",
-    "the $1000 emergency fund rule",
-    "dollar cost averaging explained simply",
-    "why most people never build wealth",
-    "the one account trick that forces you to save",
-    "what wealthy people do differently with their first paycheck",
-    "how to negotiate a raise in 30 seconds",
-    "the 10% rule that changed my financial life",
-    "why renting is not always throwing money away",
-    "what no one tells you about your 20s and money",
-    "the silent killer of your savings account",
-    "why broke people stay broke and rich people get richer",
-    "the biggest money mistake people make in their 30s",
-    "how rich people think about money differently",
-    "stop buying these 5 things if you want to be wealthy",
-    "the truth about passive income nobody talks about",
-    "why your job will never make you rich",
-    "how to build wealth on a low income",
-    "the money rule that changed everything for me",
-    "what banks don't want you to know",
-    "why most people retire broke",
-    "the fastest way to pay off debt",
-    "3 investments every beginner should know",
-    "why saving money is not enough",
-    "the psychology of why you overspend",
-    "what financial freedom actually looks like",
-    "how to make your money work while you sleep",
-    "the trap of lifestyle inflation",
-    "why the middle class is disappearing",
-    "how one decision can cost you $100k",
-    "the secret weapon of every millionaire",
-    "why budgeting apps are ruining your finances",
-    "what rich people never spend money on",
-    "the simple math that proves you can retire early",
-    "why your savings account is losing you money",
-    "how to turn $100 into real wealth",
-    "the spending habit that keeps 90% of people poor",
-    "what I wish I knew about money at 18",
-    "why financial advice from parents is outdated",
-    "the one number that controls your financial future",
-    "how to get a raise without asking",
-    "why living below your means is not about being cheap",
-    "the real reason you can not save money",
-    "what happens to your money when you sleep",
+    "how Elon Musk almost lost everything in 2008",
+    "the day Jeff Bezos quit his Wall Street job to start Amazon",
+    "how Warren Buffett bought his first stock at age 11",
+    "why Steve Jobs got fired from his own company",
+    "how Sara Blakely built Spanx with her last $5000",
+    "the money rule Warren Buffett lives by",
+    "how Oprah went from poverty to a billion dollars",
+    "the bet that made Elon Musk richer than anyone in history",
+    "how Mark Zuckerberg turned a dorm room into $100 billion",
+    "the moment Jeff Bezos decided Amazon was worth the risk",
+    "how Howard Schultz grew up too poor to afford coffee",
+    "why Warren Buffett still lives in the same house from 1958",
+    "the $1 salary that made Elon Musk even richer",
+    "how Ray Dalio lost everything and rebuilt from zero",
+    "the habit that made Warren Buffett a billionaire",
+    "how Sam Walton built Walmart from a small-town store",
+    "why Bill Gates dropped out and why it worked",
+    "the $50 investment that started Warren Buffett's empire",
+    "how Larry Ellison was rejected by every investor",
+    "the night Elon Musk cried on national TV about Tesla",
+    "how Steve Jobs came back and saved Apple from bankruptcy",
+    "the dark moment Mark Cuban almost gave up",
+    "how Kylie Jenner built a billion dollar brand at 21",
+    "the morning routine every billionaire swears by",
+    "what Jeff Bezos said about failure that changed everything",
+    "how Richard Branson built an empire without a college degree",
+    "the money mistake Warren Buffett regrets the most",
+    "how Rihanna became richer than any musician alive",
+    "the rule Elon Musk uses to make every big decision",
+    "how Charlie Munger turned $1 into a billion",
 ]
 
 SEARCH_TERMS = {
@@ -99,17 +79,12 @@ SEARCH_TERMS = {
 def pick_topic() -> str:
     """Generate a fresh topic with Claude, fallback to bank."""
     try:
-        angle = random.choice([
-            "a shocking truth most people don't know",
-            "a contrarian take that challenges common advice",
-            "a story-driven personal lesson",
-            "a step-by-step tactical tip",
-            "a myth-busting fact about money",
-            "a comparison between rich and poor mindsets",
-            "a warning about a common mistake",
-            "a motivational insight about building wealth",
-            "a specific number or rule that surprises people",
-            "a dark truth about the financial system",
+        billionaire = random.choice([
+            "Elon Musk", "Warren Buffett", "Jeff Bezos", "Steve Jobs",
+            "Sara Blakely", "Oprah Winfrey", "Ray Dalio", "Mark Cuban",
+            "Richard Branson", "Sam Walton", "Larry Ellison", "Bill Gates",
+            "Charlie Munger", "Howard Schultz", "Rihanna", "Jay-Z",
+            "Mark Zuckerberg", "Kylie Jenner", "Michael Jordan", "Tiger Woods",
         ])
         response = anthropic_client.messages.create(
             model="claude-opus-4-8",
@@ -119,10 +94,9 @@ def pick_topic() -> str:
                 {
                     "role": "user",
                     "content": (
-                        f"Generate ONE catchy YouTube Shorts title about personal finance or wealth. "
-                        f"The angle should be: {angle}. "
-                        f"It should be under 60 characters, hook-driven, and feel fresh and original. "
-                        f"Do NOT use titles starting with a number like '5 habits' or '3 things'. "
+                        f"Generate ONE catchy YouTube Shorts title about a dramatic true story involving {billionaire} and money or success. "
+                        f"It should be under 60 characters, hook-driven, and make people desperate to watch. "
+                        f"Examples: 'The night Elon Musk had $0 left', 'Why Buffett still drives a cheap car'. "
                         f"Reply with ONLY the title, nothing else."
                     ),
                 }
@@ -140,16 +114,20 @@ def pick_topic() -> str:
 def generate_script(topic: str) -> dict:
     """Return {hook, body_lines, cta} for the video."""
     story_opener = random.choice([
-        "5 years ago I lost everything.",
-        "I made $100k in one month and still went broke.",
-        "At 24 I had $0 in my account and $40k in debt.",
-        "I watched my dad lose his house because of one mistake.",
-        "3 years ago I quit my job with $200 in my bank account.",
-        "I used to cry checking my bank balance.",
-        "My first investment wiped out my entire savings.",
-        "I was making $80k a year and still living paycheck to paycheck.",
-        "Nobody told me this about money when I was growing up.",
-        "The day I lost $50k taught me everything about wealth.",
+        "In 2008, Elon Musk was down to his last dollar.",
+        "Warren Buffett bought his first stock at 11 years old.",
+        "Jeff Bezos left a $1 million bonus on the table to start Amazon.",
+        "Steve Jobs was once fired from the company he created.",
+        "Sara Blakely had $5000 and one idea that changed everything.",
+        "Oprah was fired from her first TV job and told she was unfit for television.",
+        "Ray Dalio lost everything at 30 and had to start over from zero.",
+        "Howard Schultz grew up so poor his family couldn't afford a doctor.",
+        "Mark Cuban slept on the floor of a 3-bedroom apartment with 5 roommates.",
+        "Richard Branson has dyslexia and failed out of school at 16.",
+        "Sam Walton opened his first store with a $20,000 loan from his father-in-law.",
+        "Larry Ellison was rejected by every single investor before Oracle took off.",
+        "Charlie Munger was broke at 30 with a failed marriage and a dead son.",
+        "Bill Gates dropped out of Harvard and his parents thought he was throwing his life away.",
     ])
     prompt = f"""Write a YouTube Shorts script for: "{topic}"
 
@@ -166,11 +144,12 @@ Format your response as JSON with these exact keys:
 }}
 
 Rules:
-- Write the body like a dramatic personal story being told out loud
-- Use "I", "me", "my" — first person throughout
-- Build tension — something went wrong, then the lesson hit
-- Short punchy sentences. Each line should make the viewer want to hear the next one
-- End with a lesson or revelation that feels earned, not preachy
+- Tell the story of a real billionaire or famous wealthy person in a dramatic, exciting way
+- Write like a narrator telling a gripping true story — third person is fine ("He had $0 left...")
+- Use real known facts about the person — do NOT invent quotes or false events
+- Build tension — show the low point, the turning moment, then the lesson
+- Short punchy sentences. Each one should make the viewer lean in for the next
+- End with a money lesson the viewer can apply to their own life
 - Total spoken length: 70-90 seconds
 - No jargon, no lists, no "number one number two" format
 - search_query must be SPECIFIC and VISUAL — e.g. "person staring at empty wallet",
