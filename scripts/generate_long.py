@@ -57,7 +57,7 @@ def pick_topic() -> tuple[str, str]:
                 ),
             }],
         )
-        title = response.content[-1].text.strip().strip('"')
+        title = next(b.text for b in response.content if b.type == "text").strip().strip('"')
     except Exception as e:
         print(f"[topic] Claude failed ({e}), using fallback")
         title = f"The Untold Story of How {billionaire} Built Their Empire"
@@ -124,7 +124,7 @@ Respond with ONLY valid JSON in this exact format:
         messages=[{"role": "user", "content": prompt}],
     )
 
-    text = response.content[-1].text.strip()
+    text = next(b.text for b in response.content if b.type == "text").strip()
     start = text.find("{")
     end = text.rfind("}") + 1
     script = json.loads(text[start:end])

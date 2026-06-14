@@ -102,7 +102,7 @@ def pick_topic() -> str:
                 }
             ],
         )
-        topic = response.content[-1].text.strip().strip('"')
+        topic = next(b.text for b in response.content if b.type == "text").strip().strip('"')
         print(f"[topic] Claude generated: {topic}")
         return topic
     except Exception as e:
@@ -165,8 +165,7 @@ Rules:
         messages=[{"role": "user", "content": prompt}],
     )
 
-    text = response.content[-1].text.strip()
-    # Extract JSON from the response
+    text = next(b.text for b in response.content if b.type == "text").strip()
     start = text.find("{")
     end = text.rfind("}") + 1
     script = json.loads(text[start:end])
