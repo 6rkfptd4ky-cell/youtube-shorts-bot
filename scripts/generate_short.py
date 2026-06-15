@@ -496,8 +496,8 @@ def assemble_video(
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
         # Dark cinematic style: big white bold text, centered, dark moody footage
         subtitle_style = (
-            "FontSize=58,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-            "Bold=1,Outline=4,Shadow=0,Alignment=5,BorderStyle=1"
+            "FontSize=28,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+            "Bold=1,Outline=3,Shadow=0,Alignment=5,BorderStyle=1"
         )
 
         # Dark cinematic filter: darken + desaturate footage
@@ -508,7 +508,7 @@ def assemble_video(
             inputs += ["-i", str(music_path)]
             # Voice at full volume, music at 30% underneath
             audio_filter = (
-                f"[2:a]volume=0.30,aloop=loop=-1:size=2000000000[mus];"
+                f"[2:a]volume=0.08,aloop=loop=-1:size=2000000000[mus];"
                 f"[1:a][mus]amix=inputs=2:duration=first[aout]"
             )
             audio_args = ["-filter_complex", audio_filter, "-map", "0:v", "-map", "[aout]"]
