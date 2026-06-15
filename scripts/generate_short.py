@@ -496,8 +496,8 @@ def assemble_video(
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
         # Dark cinematic style: big white bold text, centered, dark moody footage
         subtitle_style = (
-            "FontSize=28,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-            "Bold=1,Outline=3,Shadow=0,Alignment=5,BorderStyle=1"
+            "FontSize=20,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,"
+            "Bold=1,Outline=3,Shadow=0,MarginV=90,Alignment=2,BorderStyle=1"
         )
 
         # Dark cinematic filter: darken + desaturate footage
@@ -601,8 +601,6 @@ def main():
     # 2. Generate script
     script = generate_script(topic)
     captions = [script["hook"]] + script["body"] + [script["cta"]]
-    # Uppercase for dramatic dark cinematic look
-    captions = [line.upper() for line in captions]
 
     # Save script for reference
     (run_dir / "script.json").write_text(json.dumps(script, indent=2))
