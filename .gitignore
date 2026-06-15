@@ -3,6 +3,7 @@ output/
 assets/
 *.mp4
 *.mp3
+!resources/music/*.mp3
 client_secrets.json
 __pycache__/
 *.pyc
