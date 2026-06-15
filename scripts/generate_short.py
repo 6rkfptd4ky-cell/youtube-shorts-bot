@@ -158,19 +158,31 @@ Rules:
   Never use generic terms like "money finance" or "business growth"
 """
 
-    response = anthropic_client.messages.create(
-        model="claude-opus-4-8",
-        max_tokens=600,
-        thinking={"type": "adaptive"},
-        messages=[{"role": "user", "content": prompt}],
-    )
+    for attempt in range(3):
+        response = anthropic_client.messages.create(
+            model="claude-opus-4-8",
+            max_tokens=1200,
+            thinking={"type": "adaptive"},
+            messages=[{"role": "user", "content": prompt}],
+        )
 
-    text = next(b.text for b in response.content if b.type == "text").strip()
-    start = text.find("{")
-    end = text.rfind("}") + 1
-    script = json.loads(text[start:end])
-    print(f"[script] Generated script for: {topic}")
-    return script
+        text_blocks = [b.text for b in response.content if b.type == "text"]
+        text = text_blocks[0].strip() if text_blocks else ""
+        print(f"[script] Response preview (attempt {attempt+1}): {text[:200]}")
+
+        start = text.find("{")
+        end = text.rfind("}") + 1
+        if start == -1 or end == 0:
+            print("[script] No JSON found, retrying...")
+            continue
+        try:
+            script = json.loads(text[start:end])
+            print(f"[script] Generated script for: {topic}")
+            return script
+        except json.JSONDecodeError as e:
+            print(f"[script] JSON parse error: {e}, retrying...")
+
+    raise RuntimeError("Failed to generate valid script after 3 attempts")
 
 
 def generate_voiceover(script: dict, output_path: Path) -> Path:
