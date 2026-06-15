@@ -27,6 +27,7 @@ ASSETS_DIR.mkdir(exist_ok=True)
 anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 PEXELS_KEY = os.environ["PEXELS_API_KEY"]
+PIXABAY_KEY = os.environ["PIXABAY_API_KEY"]
 
 # ─── Topic bank (fallback if Claude doesn't generate a fresh one) ─────────────
 TOPIC_BANK = [
@@ -232,49 +233,76 @@ def get_audio_duration(audio_path: Path) -> float:
     return float(data["streams"][0]["duration"])
 
 
+def _photo_to_clip(photo_path: Path, clip_path: Path) -> bool:
+    """Convert a photo to a 3-second vertical video clip."""
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-loop", "1", "-i", str(photo_path),
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+                "-t", "3", "-pix_fmt", "yuv420p", "-r", "30", "-an",
+                str(clip_path),
+            ],
+            check=True, capture_output=True, timeout=60,
+        )
+        return True
+    except Exception as e:
+        print(f"[photos] ffmpeg failed: {e}")
+        return False
+
+
 def fetch_photos(search_query: str, count: int, output_dir: Path) -> list[Path]:
-    """Download Pexels photos and convert to animated 3-second video clips."""
-    headers = {"Authorization": PEXELS_KEY}
+    """Download photos from Pexels + Pixabay and convert to 3-second clips."""
+    photo_urls = []
+
+    # Pexels photos
     try:
         resp = requests.get(
             "https://api.pexels.com/v1/search",
-            headers=headers,
-            params={"query": search_query, "per_page": 15, "page": random.randint(1, 3)},
+            headers={"Authorization": PEXELS_KEY},
+            params={"query": search_query, "per_page": 10, "page": random.randint(1, 4)},
             timeout=30,
         )
-        resp.raise_for_status()
-        photos = resp.json().get("photos", [])
+        for p in resp.json().get("photos", []):
+            photo_urls.append(p["src"].get("large2x") or p["src"]["large"])
     except Exception as e:
-        print(f"[photos] Fetch failed: {e}")
-        return []
+        print(f"[photos] Pexels failed: {e}")
 
+    # Pixabay photos
+    try:
+        resp = requests.get(
+            "https://pixabay.com/api/",
+            params={
+                "key": PIXABAY_KEY, "q": search_query, "per_page": 10,
+                "image_type": "photo", "orientation": "vertical",
+                "page": random.randint(1, 4),
+            },
+            timeout=30,
+        )
+        for p in resp.json().get("hits", []):
+            url = p.get("fullHDURL") or p.get("largeImageURL")
+            if url:
+                photo_urls.append(url)
+    except Exception as e:
+        print(f"[photos] Pixabay failed: {e}")
+
+    random.shuffle(photo_urls)
     clips = []
-    for i, photo in enumerate(random.sample(photos, min(count, len(photos)))):
-        photo_url = photo["src"].get("large2x") or photo["src"]["large"]
-        photo_path = output_dir / f"photo_{i}.jpg"
-        r = requests.get(photo_url, timeout=30)
-        photo_path.write_bytes(r.content)
-
-        clip_path = output_dir / f"photo_clip_{i}.mp4"
+    for i, url in enumerate(photo_urls[:count]):
+        ext = ".jpg"
+        photo_path = output_dir / f"photo_{i}{ext}"
         try:
-            subprocess.run(
-                [
-                    "ffmpeg", "-y",
-                    "-loop", "1", "-i", str(photo_path),
-                    "-vf", (
-                        "scale=1080:1920:force_original_aspect_ratio=increase,"
-                        "crop=1080:1920"
-                    ),
-                    "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-                    "-t", "3", "-pix_fmt", "yuv420p", "-r", "30", "-an",
-                    str(clip_path),
-                ],
-                check=True, capture_output=True, timeout=60,
-            )
+            r = requests.get(url, timeout=30)
+            photo_path.write_bytes(r.content)
+        except Exception as e:
+            print(f"[photos] Download failed: {e}")
+            continue
+        clip_path = output_dir / f"photo_clip_{i}.mp4"
+        if _photo_to_clip(photo_path, clip_path):
             clips.append(clip_path)
             print(f"[photos] Clip {i+1} ready")
-        except Exception as e:
-            print(f"[photos] Failed clip {i}: {e}")
 
     return clips
 
@@ -293,48 +321,76 @@ def get_background_music() -> Path | None:
 
 
 def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Path]:
-    """Download stock video clips from Pexels to cover the audio duration."""
-    headers = {"Authorization": PEXELS_KEY}
-    # Search for short clips
-    resp = requests.get(
-        "https://api.pexels.com/videos/search",
-        headers=headers,
-        params={"query": search_query, "per_page": 10, "page": random.randint(1, 5), "min_duration": 3, "max_duration": 15},
-    )
-    resp.raise_for_status()
-    videos = resp.json().get("videos", [])
+    """Download stock video clips from Pexels + Pixabay to cover the audio duration."""
+    video_candidates = []  # list of (url, duration_seconds)
 
-    if not videos:
-        # Fallback search
+    # Pexels videos
+    try:
         resp = requests.get(
             "https://api.pexels.com/videos/search",
-            headers=headers,
-            params={"query": "money finance business", "per_page": 10},
+            headers={"Authorization": PEXELS_KEY},
+            params={"query": search_query, "per_page": 10,
+                    "page": random.randint(1, 5), "min_duration": 3, "max_duration": 20},
+            timeout=30,
         )
-        resp.raise_for_status()
-        videos = resp.json().get("videos", [])
+        for v in resp.json().get("videos", []):
+            files = sorted(v["video_files"], key=lambda f: f.get("width", 0), reverse=True)
+            if files:
+                video_candidates.append((files[0]["link"], v.get("duration", 5)))
+    except Exception as e:
+        print(f"[broll] Pexels failed: {e}")
 
+    # Pixabay videos
+    try:
+        resp = requests.get(
+            "https://pixabay.com/api/videos/",
+            params={
+                "key": PIXABAY_KEY, "q": search_query, "per_page": 10,
+                "video_type": "film", "page": random.randint(1, 5),
+            },
+            timeout=30,
+        )
+        for v in resp.json().get("hits", []):
+            vids = v.get("videos", {})
+            clip = vids.get("large") or vids.get("medium") or vids.get("small")
+            if clip and clip.get("url"):
+                video_candidates.append((clip["url"], v.get("duration", 5)))
+    except Exception as e:
+        print(f"[broll] Pixabay failed: {e}")
+
+    if not video_candidates:
+        # Generic fallback on Pexels
+        try:
+            resp = requests.get(
+                "https://api.pexels.com/videos/search",
+                headers={"Authorization": PEXELS_KEY},
+                params={"query": "success business entrepreneur", "per_page": 10},
+                timeout=30,
+            )
+            for v in resp.json().get("videos", []):
+                files = sorted(v["video_files"], key=lambda f: f.get("width", 0), reverse=True)
+                if files:
+                    video_candidates.append((files[0]["link"], v.get("duration", 5)))
+        except Exception as e:
+            print(f"[broll] Fallback failed: {e}")
+
+    random.shuffle(video_candidates)
     downloaded = []
     total = 0.0
-    for i, video in enumerate(videos[:6]):
+    for i, (url, clip_dur) in enumerate(video_candidates):
         if total >= duration:
             break
-        # Prefer highest resolution clip
-        files = sorted(video["video_files"], key=lambda f: f.get("width", 0), reverse=True)
-        clip_url = files[0]["link"] if files else None
-        if not clip_url:
-            continue
-
         clip_path = output_dir / f"broll_{i}.mp4"
-        r = requests.get(clip_url, stream=True, timeout=60)
-        with open(clip_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-
-        clip_dur = video.get("duration", 5)
-        total += clip_dur
-        downloaded.append(clip_path)
-        print(f"[broll] Downloaded clip {i+1} ({clip_dur}s)")
+        try:
+            r = requests.get(url, stream=True, timeout=60)
+            with open(clip_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            total += clip_dur
+            downloaded.append(clip_path)
+            print(f"[broll] Clip {i+1} ({clip_dur}s) — total {total:.0f}s")
+        except Exception as e:
+            print(f"[broll] Download failed: {e}")
 
     return downloaded
 
