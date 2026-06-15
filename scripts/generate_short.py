@@ -63,18 +63,20 @@ TOPIC_BANK = [
     "how Charlie Munger turned $1 into a billion",
 ]
 
-SEARCH_TERMS = {
-    "money": "money cash finance",
-    "habit": "morning routine lifestyle",
-    "invest": "stock market business growth",
-    "budget": "budget planning finance",
-    "wealth": "luxury lifestyle success",
-    "salary": "office work business",
-    "save": "piggy bank savings coins",
-    "debt": "credit card money stress",
-    "compound": "growth chart investment",
-    "rule": "finance planning notebook",
-}
+DARK_QUERIES = [
+    "dark city night aerial cinematic",
+    "lone person walking empty road night",
+    "storm clouds dramatic sky timelapse",
+    "silhouette person standing sunset dark",
+    "dark moody fog forest atmospheric",
+    "rain window night city lights blur",
+    "empty highway night long exposure",
+    "dark dramatic ocean waves slow motion",
+    "person sitting alone dark room light",
+    "luxury car driving night city lights",
+    "dark skyscraper city night reflection",
+    "black and white crowd walking street",
+]
 
 
 def pick_topic() -> str:
@@ -113,50 +115,27 @@ def pick_topic() -> str:
 
 
 def generate_script(topic: str) -> dict:
-    """Return {hook, body_lines, cta} for the video."""
-    story_opener = random.choice([
-        "In 2008, Elon Musk was down to his last dollar.",
-        "Warren Buffett bought his first stock at 11 years old.",
-        "Jeff Bezos left a $1 million bonus on the table to start Amazon.",
-        "Steve Jobs was once fired from the company he created.",
-        "Sara Blakely had $5000 and one idea that changed everything.",
-        "Oprah was fired from her first TV job and told she was unfit for television.",
-        "Ray Dalio lost everything at 30 and had to start over from zero.",
-        "Howard Schultz grew up so poor his family couldn't afford a doctor.",
-        "Mark Cuban slept on the floor of a 3-bedroom apartment with 5 roommates.",
-        "Richard Branson has dyslexia and failed out of school at 16.",
-        "Sam Walton opened his first store with a $20,000 loan from his father-in-law.",
-        "Larry Ellison was rejected by every single investor before Oracle took off.",
-        "Charlie Munger was broke at 30 with a failed marriage and a dead son.",
-        "Bill Gates dropped out of Harvard and his parents thought he was throwing his life away.",
-    ])
-    prompt = f"""Write a YouTube Shorts script for: "{topic}"
+    """Return {hook, body, cta} — raw punchy motivational lines for dark cinematic style."""
+    prompt = f"""Write a short motivational script about: "{topic}"
 
-Opening line (use this EXACTLY as the hook): "{story_opener}"
-
-
+Style: Raw, intense, cinematic — like a voiceover on a dark motivational video.
+No fluff. No filler. Every line hits hard.
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "The opening line provided above — use it word for word",
+  "hook": "One powerful shocking opening line — make it hit immediately",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8"],
-  "cta": "Closing line that teases what they learned or tells them to follow",
-  "search_query": "Specific cinematic Pexels video search term (4-6 words, very visual and specific)"
+  "cta": "One final powerful truth or lesson — make it unforgettable"
 }}
 
 Rules:
-- Tell the story of a real billionaire or famous wealthy person in a dramatic, exciting way
-- Write like a narrator telling a gripping true story — third person is fine ("He had $0 left...")
-- Use real known facts about the person — do NOT invent quotes or false events
-- Build tension — show the low point, the turning moment, then the lesson
-- Short punchy sentences ending with a period. Each one should make the viewer lean in for the next
-- End with a money lesson the viewer can apply to their own life
-- Total spoken length: 70-90 seconds
-- No jargon, no lists, no "number one number two" format
-- search_query must be SPECIFIC and VISUAL — e.g. "person staring at empty wallet",
-  "stressed man at laptop late night", "luxury car driving empty road",
-  "businessman walking away from office building"
-  Never use generic terms like "money finance" or "business growth"
+- Based on real known facts about this person — do NOT invent quotes or false events
+- Write in second or third person, raw and direct ("He had nothing." / "Most people never try.")
+- Short sentences. 5-12 words per line max.
+- No soft language. No "perhaps" or "maybe" or "it seems".
+- Build from struggle → turning point → unstoppable rise
+- Think: dark, cinematic, intense — someone watching at 2am who needs to hear this
+- Total spoken length: 60-80 seconds
 """
 
     for attempt in range(3):
@@ -515,18 +494,21 @@ def assemble_video(
         srt_path.write_text("\n".join(srt_lines))
 
         # 5. Merge video + audio (+ optional music) + burned-in subtitles
-        # Yellow text, thick black outline — high readability viral Shorts style
+        # Dark cinematic style: big white bold text, centered, dark moody footage
         subtitle_style = (
-            "FontSize=20,PrimaryColour=&H0000FFFF,OutlineColour=&H00000000,"
-            "Bold=1,Outline=3,Shadow=0,MarginV=90,Alignment=2,BorderStyle=1"
+            "FontSize=58,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+            "Bold=1,Outline=4,Shadow=0,Alignment=5,BorderStyle=1"
         )
+
+        # Dark cinematic filter: darken + desaturate footage
+        dark_filter = "eq=brightness=-0.18:contrast=1.15:saturation=0.35"
 
         inputs = ["-i", str(trimmed), "-i", str(audio_path)]
         if music_path:
             inputs += ["-i", str(music_path)]
-            # Mix voiceover (full volume) + music (15% volume), loop music
+            # Voice at full volume, music at 30% underneath
             audio_filter = (
-                f"[2:a]volume=0.15,aloop=loop=-1:size=2000000000[mus];"
+                f"[2:a]volume=0.30,aloop=loop=-1:size=2000000000[mus];"
                 f"[1:a][mus]amix=inputs=2:duration=first[aout]"
             )
             audio_args = ["-filter_complex", audio_filter, "-map", "0:v", "-map", "[aout]"]
@@ -543,13 +525,16 @@ def assemble_video(
 
         try:
             subprocess.run(
-                base_cmd + ["-vf", f"subtitles={srt_path}:force_style='{subtitle_style}'", str(output_path)],
+                base_cmd + [
+                    "-vf", f"{dark_filter},subtitles={srt_path}:force_style='{subtitle_style}'",
+                    str(output_path),
+                ],
                 check=True, capture_output=True,
             )
         except subprocess.CalledProcessError as e:
             print(f"[warn] Subtitles failed ({e.returncode}), rendering without captions")
             subprocess.run(
-                base_cmd + [str(output_path)],
+                base_cmd + ["-vf", dark_filter, str(output_path)],
                 check=True, capture_output=True,
             )
 
@@ -616,7 +601,8 @@ def main():
     # 2. Generate script
     script = generate_script(topic)
     captions = [script["hook"]] + script["body"] + [script["cta"]]
-    search_q = script.get("search_query", "money finance")
+    # Uppercase for dramatic dark cinematic look
+    captions = [line.upper() for line in captions]
 
     # Save script for reference
     (run_dir / "script.json").write_text(json.dumps(script, indent=2))
@@ -628,11 +614,13 @@ def main():
     print(f"[audio] Duration: {duration:.1f}s")
     word_timestamps = transcribe_audio(audio_path)
 
-    # 4. Download b-roll (video clips + photos mixed)
+    # 4. Download b-roll using dark cinematic queries
     broll_dir = run_dir / "broll"
     broll_dir.mkdir()
-    video_clips = fetch_broll(search_q, duration, broll_dir)
-    photo_clips = fetch_photos(search_q, count=3, output_dir=broll_dir)
+    dark_q = random.choice(DARK_QUERIES)
+    dark_q2 = random.choice(DARK_QUERIES)
+    video_clips = fetch_broll(dark_q, duration, broll_dir)
+    photo_clips = fetch_photos(dark_q2, count=3, output_dir=broll_dir)
 
     # Interleave photos between video clips for variety
     clips = []
