@@ -125,7 +125,8 @@ Format your response as JSON with these exact keys:
 {{
   "hook": "One powerful shocking opening line — make it hit immediately",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8"],
-  "cta": "One final powerful truth or lesson — make it unforgettable"
+  "cta": "One final powerful truth or lesson — make it unforgettable",
+  "search_query": "Specific visual Pexels search term that matches the story (4-6 words, e.g. 'businessman walking empty office', 'person staring out window thinking')"
 }}
 
 Rules:
@@ -612,13 +613,12 @@ def main():
     print(f"[audio] Duration: {duration:.1f}s")
     word_timestamps = transcribe_audio(audio_path)
 
-    # 4. Download b-roll using dark cinematic queries
+    # 4. Download b-roll matched to the story topic
     broll_dir = run_dir / "broll"
     broll_dir.mkdir()
-    dark_q = random.choice(DARK_QUERIES)
-    dark_q2 = random.choice(DARK_QUERIES)
-    video_clips = fetch_broll(dark_q, duration, broll_dir)
-    photo_clips = fetch_photos(dark_q2, count=3, output_dir=broll_dir)
+    search_q = script.get("search_query", "businessman success motivation")
+    video_clips = fetch_broll(search_q, duration, broll_dir)
+    photo_clips = fetch_photos(search_q, count=3, output_dir=broll_dir)
 
     # Interleave photos between video clips for variety
     clips = []
