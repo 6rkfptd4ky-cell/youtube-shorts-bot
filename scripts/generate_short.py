@@ -632,9 +632,8 @@ def main():
     random.shuffle(clips)
 
     # 5. Assemble video
-    music = get_background_music()
     video_path = run_dir / "short.mp4"
-    assemble_video(clips, audio_path, captions, video_path, music_path=music, word_timestamps=word_timestamps)
+    assemble_video(clips, audio_path, captions, video_path, music_path=None, word_timestamps=word_timestamps)
 
     # 6. Upload to YouTube
     hook_line = script.get("hook", "")
