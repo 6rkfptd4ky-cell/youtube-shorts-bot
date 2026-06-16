@@ -64,18 +64,18 @@ TOPIC_BANK = [
 ]
 
 DARK_QUERIES = [
-    "dark city night aerial cinematic",
-    "lone person walking empty road night",
-    "storm clouds dramatic sky timelapse",
-    "silhouette person standing sunset dark",
-    "dark moody fog forest atmospheric",
-    "rain window night city lights blur",
-    "empty highway night long exposure",
-    "dark dramatic ocean waves slow motion",
-    "person sitting alone dark room light",
-    "luxury car driving night city lights",
-    "dark skyscraper city night reflection",
-    "black and white crowd walking street",
+    "stock market trading screen charts",
+    "money cash dollars bills close up",
+    "stock exchange trading floor busy",
+    "gold bars wealth luxury",
+    "businessman looking at stock charts",
+    "crypto bitcoin trading screen",
+    "wall street new york finance",
+    "coins money stacking growing",
+    "luxury penthouse city view wealth",
+    "stock market graph going up",
+    "banker suit walking city finance",
+    "trading charts candlestick green red",
 ]
 
 
