@@ -97,10 +97,11 @@ def pick_topic() -> str:
                 {
                     "role": "user",
                     "content": (
-                        f"Generate ONE catchy YouTube Shorts title about a dramatic true story involving {billionaire} and money or success. "
-                        f"It should be under 60 characters, hook-driven, and make people desperate to watch. "
-                        f"Examples: 'The night Elon Musk had $0 left', 'Why Buffett still drives a cheap car'. "
-                        f"Reply with ONLY the title, nothing else."
+                        f"Generate ONE YouTube Shorts title about a shocking true story involving {billionaire} and money or success. "
+                        f"Under 60 characters. Use a curiosity gap or a number or a shocking fact to make people HAVE to watch. "
+                        f"Examples: 'He had $0 and 2 weeks to save Tesla', 'Buffett bought his first stock at age 11', "
+                        f"'She was fired. Then built a $1B brand.', 'The bet that made Bezos a billionaire'. "
+                        f"NO clickbait lies — must be based on real events. Reply with ONLY the title."
                     ),
                 }
             ],
@@ -116,27 +117,26 @@ def pick_topic() -> str:
 
 def generate_script(topic: str) -> dict:
     """Return {hook, body, cta} — raw punchy motivational lines for dark cinematic style."""
-    prompt = f"""Write a short motivational script about: "{topic}"
+    prompt = f"""Write a YouTube Shorts script about: "{topic}"
 
-Style: Raw, intense, cinematic — like a voiceover on a dark motivational video.
-No fluff. No filler. Every line hits hard.
+Style: Raw, intense, cinematic narration. Every line earns its place.
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "One powerful shocking opening line — make it hit immediately",
-  "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8"],
-  "cta": "One final powerful truth or lesson — make it unforgettable",
-  "search_query": "Specific visual Pexels search term that matches the story (4-6 words, e.g. 'businessman walking empty office', 'person staring out window thinking')"
+  "hook": "The opening line — CRITICAL. Must stop someone mid-scroll. Use a shocking number, a contradiction, or drop them into the worst moment ('He had 6 days before Tesla went bankrupt.'). NO slow build. Hit immediately.",
+  "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8", "line 9", "line 10"],
+  "cta": "End with a question that makes viewers want to comment. Something they have an opinion on. E.g. 'Would you have taken that risk?' or 'What would you have done?' — direct, personal, one sentence.",
+  "search_query": "Specific visual search term matching the story (4-6 words, e.g. 'stressed businessman empty office night', 'person walking away city street')"
 }}
 
 Rules:
-- Based on real known facts about this person — do NOT invent quotes or false events
-- Write in second or third person, raw and direct ("He had nothing." / "Most people never try.")
-- Short sentences. 5-12 words per line max.
-- No soft language. No "perhaps" or "maybe" or "it seems".
-- Build from struggle → turning point → unstoppable rise
-- Think: dark, cinematic, intense — someone watching at 2am who needs to hear this
-- Total spoken length: 60-80 seconds
+- Based on real known facts — do NOT invent quotes or false events
+- Third person narration, direct and raw ("He had nothing." / "Everyone said no.")
+- 5-12 words per line max. Short sentences only.
+- No filler words. No "perhaps", "maybe", "it seems", "arguably".
+- Arc: shocking low point → the turn → unstoppable rise → lesson
+- Total spoken length: 75-95 seconds
+- The hook is the most important line. Rewrite it until it's impossible to scroll past.
 """
 
     for attempt in range(3):
