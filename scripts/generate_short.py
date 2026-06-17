@@ -257,6 +257,7 @@ def fetch_photos(search_query: str, count: int, output_dir: Path) -> list[Path]:
             params={
                 "key": PIXABAY_KEY, "q": search_query, "per_page": 10,
                 "image_type": "photo", "orientation": "vertical",
+                "safesearch": "true",
                 "page": random.randint(1, 4),
             },
             timeout=30,
@@ -326,7 +327,7 @@ def fetch_broll(search_query: str, duration: float, output_dir: Path) -> list[Pa
             "https://pixabay.com/api/videos/",
             params={
                 "key": PIXABAY_KEY, "q": search_query, "per_page": 10,
-                "video_type": "film", "page": random.randint(1, 5),
+                "video_type": "film", "safesearch": "true", "page": random.randint(1, 5),
             },
             timeout=30,
         )
