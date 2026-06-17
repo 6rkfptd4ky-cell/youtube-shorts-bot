@@ -31,51 +31,36 @@ PIXABAY_KEY = os.environ["PIXABAY_API_KEY"]
 
 # ─── Topic bank (fallback if Claude doesn't generate a fresh one) ─────────────
 TOPIC_BANK = [
-    "how Elon Musk almost lost everything in 2008",
-    "the day Jeff Bezos quit his Wall Street job to start Amazon",
-    "how Warren Buffett bought his first stock at age 11",
-    "why Steve Jobs got fired from his own company",
-    "how Sara Blakely built Spanx with her last $5000",
-    "the money rule Warren Buffett lives by",
-    "how Oprah went from poverty to a billion dollars",
-    "the bet that made Elon Musk richer than anyone in history",
-    "how Mark Zuckerberg turned a dorm room into $100 billion",
-    "the moment Jeff Bezos decided Amazon was worth the risk",
-    "how Howard Schultz grew up too poor to afford coffee",
-    "why Warren Buffett still lives in the same house from 1958",
-    "the $1 salary that made Elon Musk even richer",
-    "how Ray Dalio lost everything and rebuilt from zero",
-    "the habit that made Warren Buffett a billionaire",
-    "how Sam Walton built Walmart from a small-town store",
-    "why Bill Gates dropped out and why it worked",
-    "the $50 investment that started Warren Buffett's empire",
-    "how Larry Ellison was rejected by every investor",
-    "the night Elon Musk cried on national TV about Tesla",
-    "how Steve Jobs came back and saved Apple from bankruptcy",
-    "the dark moment Mark Cuban almost gave up",
-    "how Kylie Jenner built a billion dollar brand at 21",
-    "the morning routine every billionaire swears by",
-    "what Jeff Bezos said about failure that changed everything",
-    "how Richard Branson built an empire without a college degree",
-    "the money mistake Warren Buffett regrets the most",
-    "how Rihanna became richer than any musician alive",
-    "the rule Elon Musk uses to make every big decision",
-    "how Charlie Munger turned $1 into a billion",
-]
-
-DARK_QUERIES = [
-    "stock market trading screen charts",
-    "money cash dollars bills close up",
-    "stock exchange trading floor busy",
-    "gold bars wealth luxury",
-    "businessman looking at stock charts",
-    "crypto bitcoin trading screen",
-    "wall street new york finance",
-    "coins money stacking growing",
-    "luxury penthouse city view wealth",
-    "stock market graph going up",
-    "banker suit walking city finance",
-    "trading charts candlestick green red",
+    "how banks create money out of thin air",
+    "how credit card companies make billions off you",
+    "how supermarkets trick you into spending more",
+    "how casinos are designed so you never win",
+    "how Amazon knows what you want before you do",
+    "how airlines price tickets to maximise profit",
+    "how insurance companies avoid paying your claims",
+    "how the stock market is rigged against small investors",
+    "how your phone tracks you even when it is off",
+    "how YouTube decides which videos go viral",
+    "how fast food companies keep you addicted",
+    "how payday loans trap people in debt forever",
+    "how Netflix decides what shows to make",
+    "how car dealerships make money without selling cars",
+    "how social media is engineered to be addictive",
+    "how big pharma prices medication",
+    "how Apple makes it hard to leave iPhone",
+    "how gyms make money from people who never show up",
+    "how your credit score is calculated and used against you",
+    "how Airbnb changed who owns property in cities",
+    "how streaming services decide what gets cancelled",
+    "how subscription traps keep charging you forever",
+    "how lobbying lets corporations write their own laws",
+    "how dark patterns trick you into paying more online",
+    "how inflation quietly steals your savings",
+    "how dividend stocks pay you while you sleep",
+    "how hedge funds bet against companies and win",
+    "how Uber destroyed the taxi industry on purpose",
+    "how Google makes money from your searches",
+    "how the housing market keeps first time buyers out",
 ]
 
 
@@ -97,11 +82,11 @@ def pick_topic() -> str:
                 {
                     "role": "user",
                     "content": (
-                        f"Generate ONE YouTube Shorts title about a shocking true story involving {billionaire} and money or success. "
-                        f"Under 60 characters. Use a curiosity gap or a number or a shocking fact to make people HAVE to watch. "
-                        f"Examples: 'He had $0 and 2 weeks to save Tesla', 'Buffett bought his first stock at age 11', "
-                        f"'She was fired. Then built a $1B brand.', 'The bet that made Bezos a billionaire'. "
-                        f"NO clickbait lies — must be based on real events. Reply with ONLY the title."
+                        f"Generate ONE YouTube Shorts title exposing how something in everyday life secretly works. "
+                        f"Under 60 characters. Make it sound like forbidden knowledge — something people never knew but immediately want to. "
+                        f"Examples: 'How banks create money from nothing', 'Why your gym wants you to never show up', "
+                        f"'How casinos make sure you always lose', 'The trick supermarkets use on every shopper'. "
+                        f"Must be factually true. Reply with ONLY the title."
                     ),
                 }
             ],
@@ -117,26 +102,26 @@ def pick_topic() -> str:
 
 def generate_script(topic: str) -> dict:
     """Return {hook, body, cta} — raw punchy motivational lines for dark cinematic style."""
-    prompt = f"""Write a YouTube Shorts script about: "{topic}"
+    prompt = f"""Write a YouTube Shorts script exposing: "{topic}"
 
-Style: Raw, intense, cinematic narration. Every line earns its place.
+Style: Like a documentary narrator revealing something the viewer never knew. Calm but shocking. Every fact lands like a punch.
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "The opening line — CRITICAL. Must stop someone mid-scroll. Use a shocking number, a contradiction, or drop them into the worst moment ('He had 6 days before Tesla went bankrupt.'). NO slow build. Hit immediately.",
+  "hook": "CRITICAL — the first line must make someone stop scrolling instantly. Start with a shocking fact, a number, or a statement that sounds wrong but is true. E.g. 'Your bank doesn't actually have your money.' or 'Every time you swipe your card, you pay a secret fee you never see.' NO intro, no warmup. Hit immediately.",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8", "line 9", "line 10"],
-  "cta": "End with a question that makes viewers want to comment. Something they have an opinion on. E.g. 'Would you have taken that risk?' or 'What would you have done?' — direct, personal, one sentence.",
-  "search_query": "Specific visual search term matching the story (4-6 words, e.g. 'stressed businessman empty office night', 'person walking away city street')"
+  "cta": "End with a question that makes people want to comment. Personal and direct. E.g. 'Did you know this was happening?' or 'Are you going to change how you do this now?'",
+  "search_queries": ["specific visual search term 1", "specific visual search term 2", "specific visual search term 3"]
 }}
 
 Rules:
-- Based on real known facts — do NOT invent quotes or false events
-- Third person narration, direct and raw ("He had nothing." / "Everyone said no.")
-- 5-12 words per line max. Short sentences only.
-- No filler words. No "perhaps", "maybe", "it seems", "arguably".
-- Arc: shocking low point → the turn → unstoppable rise → lesson
+- Every fact must be real and accurate
+- Explain HOW it works — not just that it exists
+- Short sentences. 5-12 words max per line.
+- Each search_query must visually show what is being talked about at that point in the video — e.g. for a credit card topic: 'credit card swipe payment terminal', 'bank building exterior glass', 'person checking credit card bill'
+- Build from: shocking fact → how it works → what it means for the viewer
+- End with something that makes them feel smarter for watching
 - Total spoken length: 75-95 seconds
-- The hook is the most important line. Rewrite it until it's impossible to scroll past.
 """
 
     for attempt in range(3):
@@ -614,12 +599,15 @@ def main():
     print(f"[audio] Duration: {duration:.1f}s")
     word_timestamps = transcribe_audio(audio_path)
 
-    # 4. Download b-roll matched to the story topic
+    # 4. Download b-roll using multiple topic-specific queries for visual variety
     broll_dir = run_dir / "broll"
     broll_dir.mkdir()
-    search_q = script.get("search_query", "businessman success motivation")
-    video_clips = fetch_broll(search_q, duration, broll_dir)
-    photo_clips = fetch_photos(search_q, count=3, output_dir=broll_dir)
+    search_queries = script.get("search_queries") or [script.get("search_query", "business finance money")]
+    video_clips = []
+    for q in search_queries[:3]:
+        clips = fetch_broll(q, duration / len(search_queries[:3]), broll_dir)
+        video_clips.extend(clips)
+    photo_clips = fetch_photos(search_queries[0], count=3, output_dir=broll_dir)
 
     # Interleave photos between video clips for variety
     clips = []
