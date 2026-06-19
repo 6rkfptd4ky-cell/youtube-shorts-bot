@@ -115,12 +115,13 @@ Format your response as JSON with these exact keys:
 }}
 
 Rules:
-- Every fact must be real and accurate
-- Explain HOW it works — not just that it exists
+- Every fact must be real and accurate — use specific numbers, percentages, dollar amounts
+- NEVER say vague things like "a lot of money" or "huge profits" — say "$2.4 billion" or "34% of every purchase"
+- Explain exactly HOW the mechanism works step by step — not just that it exists
 - Short sentences. 5-12 words max per line.
-- Each search_query must visually show what is being talked about at that point in the video — e.g. for a credit card topic: 'credit card swipe payment terminal', 'bank building exterior glass', 'person checking credit card bill'
-- Build from: shocking fact → how it works → what it means for the viewer
-- End with something that makes them feel smarter for watching
+- Each search_query must show the exact thing being described — e.g. 'credit card swipe payment close up', 'bank vault door opening', 'supermarket aisle wide angle'
+- Build: shocking specific fact → exact mechanism → what the viewer should do differently
+- Make the viewer feel like they just learned something they can tell their friends today
 - Total spoken length: 75-95 seconds
 """
 
@@ -199,18 +200,24 @@ def get_audio_duration(audio_path: Path) -> float:
 
 
 def _photo_to_clip(photo_path: Path, clip_path: Path) -> bool:
-    """Convert a photo to a 3-second vertical video clip."""
+    """Convert a photo to a 4-second clip with Ken Burns zoom effect."""
+    # Alternate between zoom-in and zoom-out for visual variety
+    zoom_in = random.choice([True, False])
+    if zoom_in:
+        zoompan = "zoompan=z='min(zoom+0.0012,1.3)':d=120:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920"
+    else:
+        zoompan = "zoompan=z='if(eq(on\\,1)\\,1.3\\,max(zoom-0.0012\\,1))':d=120:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920"
     try:
         subprocess.run(
             [
                 "ffmpeg", "-y",
                 "-loop", "1", "-i", str(photo_path),
-                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+                "-vf", f"scale=1920:1920:force_original_aspect_ratio=increase,{zoompan}",
                 "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-                "-t", "3", "-pix_fmt", "yuv420p", "-r", "30", "-an",
+                "-t", "4", "-pix_fmt", "yuv420p", "-r", "30", "-an",
                 str(clip_path),
             ],
-            check=True, capture_output=True, timeout=60,
+            check=True, capture_output=True, timeout=90,
         )
         return True
     except Exception as e:
@@ -397,7 +404,9 @@ def assemble_video(
                         "crop=1080:1920"
                     ),
                     "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-                    "-an", "-r", "30", str(out),
+                    "-an", "-r", "30",
+                    "-t", "7",  # max 7 seconds per clip for faster cuts
+                    str(out),
                 ],
                 check=True, capture_output=True,
             )
