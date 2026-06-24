@@ -719,21 +719,17 @@ def main():
     # 6. Upload to YouTube
     hook_line = script.get("hook", "")
     cta_line = script.get("cta", "")
-    body_preview = " ".join((script.get("body") or [])[:2])
+    body_lines = script.get("body") or []
+    body_preview = " ".join(body_lines[:3])
 
     description = (
         f"{topic}\n\n"
         f"{hook_line} {body_preview}\n\n"
-        f"This is the true story behind one of the world's most successful people — "
-        f"the moments they almost gave up, the decisions that changed everything, "
-        f"and the money lessons hidden inside their journey.\n\n"
-        f"Every day we share a new billionaire story that most people never hear. "
-        f"Real events. Real numbers. Real turning points.\n\n"
         f"{cta_line}\n\n"
-        f"Follow WealthMind for daily billionaire stories and the money lessons inside them.\n\n"
-        f"#wealthmind #billionaires #successstory #moneymindset #personalfinance "
-        f"#wealthhabits #elonmusk #warrenbuffett #jeffbezos #entrepreneurship "
-        f"#financetips #motivational #truestory #richmindset #shorts"
+        f"Follow WealthMind for daily money secrets, investing facts, and financial stories "
+        f"most people never hear.\n\n"
+        f"#wealthmind #personalfinance #investing #moneytips #financialfreedom "
+        f"#wealthbuilding #moneypsychology #stockmarket #richmentaliy #shorts"
     )
     try:
         video_id = upload_to_youtube(video_path, title=topic, description=description)
