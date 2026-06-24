@@ -1,10 +1,7 @@
 name: Generate & Upload Daily Long-Form Video
 
 on:
-  schedule:
-    # Once daily at 12:00 UTC (noon)
-    - cron: "0 12 * * *"
-  workflow_dispatch:  # Manual trigger from GitHub UI
+  workflow_dispatch:  # Manual trigger only — long form paused
 
 jobs:
   generate-long:
