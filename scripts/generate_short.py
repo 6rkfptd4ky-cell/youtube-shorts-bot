@@ -31,41 +31,36 @@ PIXABAY_KEY = os.environ["PIXABAY_API_KEY"]
 
 # ─── Topic bank (fallback if Claude doesn't generate a fresh one) ─────────────
 TOPIC_BANK = [
-    # Financial secrets
-    "banks create money from nothing every time you get a loan",
-    "credit card companies make $2 for every $100 you spend",
-    "your savings account loses value every single year",
-    "hedge funds legally bet against stocks they secretly own",
-    "the stock market drops every time unemployment falls",
-    "dividend investing pays you money while you sleep",
-    "the S&P 500 has never lost money over any 20-year period",
-    "Warren Buffett made 99% of his wealth after age 50",
-    # Wealth secrets
-    "Elon Musk pays almost zero income tax legally",
-    "billionaires borrow against stocks instead of selling them",
-    "the one investment that beats inflation every decade",
-    "how compound interest turns $100 a month into $1 million",
-    "why rich people buy assets and poor people buy liabilities",
-    "the tax trick that lets billionaires pass wealth tax-free",
-    # Shocking system stories
-    "how casinos architect every detail to make you lose",
-    "supermarkets put milk at the back on purpose",
-    "gyms sell 10x more memberships than they have capacity for",
-    "airlines oversell every flight on purpose",
-    "insurance companies deny 30% of claims on the first attempt",
-    "payday loans charge 400% interest legally",
-    # Investment stories
-    "the man who turned $1000 into $50 million buying one stock",
-    "the 2008 crash made some investors billions in weeks",
-    "Michael Burry predicted the housing crash and got rich",
-    "the teenage investor who beat Wall Street from his bedroom",
-    "how a pizza delivery guy accidentally became a millionaire",
-    # Money psychology
-    "why lottery winners go broke within 5 years",
-    "the psychology trick that makes you spend 30% more",
-    "why your brain is hardwired to make bad money decisions",
-    "the one money habit that separates the rich from everyone else",
-    "why most people will never build real wealth",
+    "the night Elon Musk had $0 left and bet it all on Tesla",
+    "Warren Buffett bought his first stock at 11 and never looked back",
+    "Jeff Bezos quit a $1M Wall Street job to start Amazon in a garage",
+    "Steve Jobs was fired from Apple and came back to save it",
+    "Sara Blakely had $5000 and one idea that built a billion dollar brand",
+    "Oprah was fired and told she was unfit for TV",
+    "Ray Dalio lost everything at 30 and built the world's biggest hedge fund",
+    "Howard Schultz grew up too poor to see a doctor and built Starbucks",
+    "Mark Cuban slept on the floor with 5 roommates before becoming a billionaire",
+    "Richard Branson failed school at 16 and built 400 companies",
+    "Sam Walton borrowed $20000 from his father-in-law and built Walmart",
+    "Larry Ellison was rejected by every investor before Oracle",
+    "Charlie Munger was broke at 30 with a dead son and built billions",
+    "Bill Gates dropped out of Harvard and his parents thought he was insane",
+    "Michael Jordan was cut from his high school basketball team",
+    "Jay-Z was rejected by every record label before selling millions",
+    "Rihanna became richer than any musician alive through business not music",
+    "Kylie Jenner built a billion dollar company before turning 22",
+    "Michael Burry predicted the 2008 crash and made $100M in weeks",
+    "the janitor who secretly invested $8M and left it all to charity",
+    "the man who turned $1000 into $50M buying one forgotten stock",
+    "Tiger Woods lost everything and came back to win the Masters at 43",
+    "Walt Disney went bankrupt twice before building the biggest brand on earth",
+    "Oprah went from $0 to $3B — the decisions that changed everything",
+    "the moment Mark Zuckerberg turned down a $1B offer from Yahoo",
+    "how Steve Jobs gave away Apple stock that would be worth $60B today",
+    "the one decision Jeff Bezos made that created Amazon Prime",
+    "why Warren Buffett still lives in the same $31000 house from 1958",
+    "how Elon Musk works 120 hours a week and what it cost him",
+    "the day Richard Branson nearly died and what he learned about money",
 ]
 
 HOOK_QUERIES = [
@@ -86,14 +81,11 @@ def pick_topic() -> str:
     """Generate a fresh topic with Claude, fallback to bank."""
     try:
         category = random.choice([
-            "a shocking investing or stock market fact most people don't know",
-            "a wealth building secret that rich people use but never talk about",
-            "a surprising true story about someone who got rich or lost everything",
-            "a financial system secret that benefits companies at your expense",
-            "a money psychology fact that explains why most people stay broke",
-            "a compound interest or passive income fact with real numbers",
-            "a tax or legal loophole that the wealthy use",
-            "a shocking fact about a famous billionaire's early life or money habits",
+            "Elon Musk", "Warren Buffett", "Jeff Bezos", "Steve Jobs",
+            "Sara Blakely", "Oprah Winfrey", "Ray Dalio", "Mark Cuban",
+            "Richard Branson", "Sam Walton", "Bill Gates", "Charlie Munger",
+            "Michael Jordan", "Jay-Z", "Rihanna", "Mark Zuckerberg",
+            "Howard Schultz", "Larry Ellison", "Tiger Woods", "Walt Disney",
         ])
         response = anthropic_client.messages.create(
             model="claude-opus-4-8",
@@ -103,12 +95,11 @@ def pick_topic() -> str:
                 {
                     "role": "user",
                     "content": (
-                        f"Generate ONE YouTube Shorts title about: {category}. "
-                        f"Under 60 characters. Make it instantly shocking — a fact, a number, or a secret people don't know. "
-                        f"Vary the format — sometimes use a question, sometimes a statement, sometimes start with 'Why' or 'How' or a number. "
-                        f"Examples: 'Buffett made 99% of his wealth after 50', 'Why rich people never sell their stocks', "
-                        f"'The tax trick billionaires use to pay nothing', '$100 a month becomes $1M — here is how'. "
-                        f"Must be factually true. Reply with ONLY the title."
+                        f"Generate ONE YouTube Shorts title about a dramatic true story involving {category}. "
+                        f"Under 60 characters. Make it impossible to scroll past — use the lowest moment, a shocking number, or a contradiction. "
+                        f"Examples: 'The night Elon had $0 and bet it all', 'Buffett made 99% of his money after 50', "
+                        f"'She was fired. Then built a $1B brand.', 'He lost everything at 30. Then built billions.' "
+                        f"Must be based on real events. Reply with ONLY the title."
                     ),
                 }
             ],
@@ -123,27 +114,27 @@ def pick_topic() -> str:
 
 
 def generate_script(topic: str) -> dict:
-    """Return {hook, body, cta} — raw punchy motivational lines for dark cinematic style."""
-    prompt = f"""Write a YouTube Shorts script exposing: "{topic}"
+    """Return {hook, body, cta} — dramatic billionaire storytelling for dark cinematic Shorts."""
+    prompt = f"""Write a dramatic YouTube Shorts script about: "{topic}"
 
-Style: Like a documentary narrator revealing something the viewer never knew. Calm but shocking. Every fact lands like a punch.
+Style: Emotional storytelling — narrate the lowest moment of someone's life before they changed everything. Build tension. Make the viewer feel the struggle, the decision, and the comeback.
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "CRITICAL — start with 'Hold up.' or 'Wait.' then one shocking fact or number. E.g. 'Hold up. Warren Buffett made 99% of his money after age 50.' or 'Wait. Your bank does not actually have your money right now.' Must sound impossible but be true. This is the line that stops someone mid-scroll.",
+  "hook": "CRITICAL — start with 'Hold up.' or 'Wait.' then ONE shocking specific fact. E.g. 'Hold up. In 2008, Elon Musk had 6 days before Tesla ran out of money.' or 'Wait. She was 30, broke, and had just been fired from the only job she ever had.' Must stop someone mid-scroll.",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8", "line 9", "line 10"],
-  "cta": "End with a question that makes people want to comment. Personal and direct. E.g. 'Did you know this was happening?' or 'Are you going to change how you do this now?'",
+  "cta": "End with a question that makes people comment. Personal and emotional. E.g. 'Would you have made the same bet?' or 'What would you have done differently?'",
   "search_queries": ["specific visual search term 1", "specific visual search term 2", "specific visual search term 3"]
 }}
 
 Rules:
-- Every fact must be real and accurate — use specific numbers, percentages, dollar amounts
-- NEVER say vague things like "a lot of money" or "huge profits" — say "$2.4 billion" or "34% of every purchase"
-- Explain exactly HOW the mechanism works step by step — not just that it exists
+- Tell the TRUE dramatic story — use specific numbers, years, dollar amounts, and real moments
+- NEVER say vague things like "a lot of money" — say "$2.4 billion" or "fired after 6 months"
+- Build: shocking low point → the one turning decision → the result that changed everything
 - Short sentences. 5-12 words max per line.
-- Each search_query must show the exact thing being described — e.g. 'credit card swipe payment close up', 'bank vault door opening', 'supermarket aisle wide angle'
-- Build: shocking specific fact → exact mechanism → what the viewer should do differently
-- Make the viewer feel like they just learned something they can tell their friends today
+- Each search_query should match the mood: luxury cars, money piles, dark office, determination, struggle
+- Take the viewer through the full journey — the failure, the moment of decision, the comeback
+- Make the viewer feel inspired and like they just learned something real about this person
 - Total spoken length: 75-95 seconds
 """
 
