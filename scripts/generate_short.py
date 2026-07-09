@@ -90,7 +90,6 @@ def pick_topic() -> str:
         response = anthropic_client.messages.create(
             model="claude-opus-4-8",
             max_tokens=200,
-            thinking={"type": "adaptive"},
             messages=[
                 {
                     "role": "user",
@@ -142,11 +141,10 @@ Rules:
         response = anthropic_client.messages.create(
             model="claude-opus-4-8",
             max_tokens=1200,
-            thinking={"type": "adaptive"},
             messages=[{"role": "user", "content": prompt}],
         )
 
-        text_blocks = [b.text for b in response.content if b.type == "text"]
+        text_blocks = [b.text for b in response.content if b.type == "text" and b.text]
         text = text_blocks[0].strip() if text_blocks else ""
         print(f"[script] Response preview (attempt {attempt+1}): {text[:200]}")
 
