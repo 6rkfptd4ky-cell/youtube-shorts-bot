@@ -116,26 +116,25 @@ def pick_topic() -> str:
 
 def generate_script(topic: str) -> dict:
     """Return {hook, body, cta} — dramatic billionaire storytelling for dark cinematic Shorts."""
-    prompt = f"""Write a dramatic YouTube Shorts script about: "{topic}"
+    prompt = f"""Write a YouTube Shorts script about wealth and money — using this true story: "{topic}"
 
-Style: Emotional storytelling — narrate the lowest moment of someone's life before they changed everything. Build tension. Make the viewer feel the struggle, the decision, and the comeback.
+This is a WEALTH and INVESTING channel. Every video must teach the viewer something about money, wealth-building, or investing through the lens of this story. The story is the hook — the money lesson is the point.
 
 Format your response as JSON with these exact keys:
 {{
-  "hook": "CRITICAL — start with 'Hold up.' or 'Wait.' then ONE shocking specific fact. E.g. 'Hold up. In 2008, Elon Musk had 6 days before Tesla ran out of money.' or 'Wait. She was 30, broke, and had just been fired from the only job she ever had.' Must stop someone mid-scroll.",
+  "hook": "CRITICAL — start with 'Hold up.' or 'Wait.' then ONE shocking money fact. E.g. 'Hold up. In 2008, Elon Musk had 6 days of cash left and bet his last $35M on Tesla.' or 'Wait. She had $5,000 in savings and one money move that made her a billionaire.' Must be about MONEY.",
   "body": ["line 1", "line 2", "line 3", "line 4", "line 5", "line 6", "line 7", "line 8", "line 9", "line 10"],
-  "cta": "End with a question that makes people comment. Personal and emotional. E.g. 'Would you have made the same bet?' or 'What would you have done differently?'",
+  "cta": "End with a money or investing question. E.g. 'Would you have risked everything on one bet?' or 'What would you do with $5,000 right now?'",
   "search_queries": ["specific visual search term 1", "specific visual search term 2", "specific visual search term 3"]
 }}
 
 Rules:
-- Tell the TRUE dramatic story — use specific numbers, years, dollar amounts, and real moments
-- NEVER say vague things like "a lot of money" — say "$2.4 billion" or "fired after 6 months"
-- Build: shocking low point → the one turning decision → the result that changed everything
+- Every line must connect back to MONEY, WEALTH, or INVESTING — not just the person's life story
+- Use specific numbers: dollar amounts, percentages, net worth, years, ages
+- Structure: shocking money moment → the financial decision they made → what it's worth today
+- End body lines with a wealth lesson the viewer can apply — what this tells us about money
 - Short sentences. 5-12 words max per line.
-- Each search_query should match the mood: luxury cars, money piles, dark office, determination, struggle
-- Take the viewer through the full journey — the failure, the moment of decision, the comeback
-- Make the viewer feel inspired and like they just learned something real about this person
+- search_queries must be money visuals: 'cash money pile', 'luxury mansion exterior', 'stock market charts', 'private jet', 'gold bars', 'sports car garage'
 - Total spoken length: 75-95 seconds
 """
 
