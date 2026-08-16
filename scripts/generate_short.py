@@ -15,6 +15,7 @@ from pathlib import Path
 import anthropic
 import requests
 from openai import OpenAI
+from elevenlabs import ElevenLabs
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent.parent
@@ -26,6 +27,7 @@ ASSETS_DIR.mkdir(exist_ok=True)
 # ─── API Clients ─────────────────────────────────────────────────────────────
 anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+elevenlabs_client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
 PEXELS_KEY = os.environ["PEXELS_API_KEY"]
 PIXABAY_KEY = os.environ["PIXABAY_API_KEY"]
 
@@ -168,13 +170,15 @@ def generate_voiceover(script: dict, output_path: Path) -> Path:
     lines = [script["hook"]] + script["body"] + [script["cta"]]
     full_text = " ... ".join(lines)
 
-    response = openai_client.audio.speech.create(
-        model="tts-1",
-        voice="onyx",  # deep, authoritative voice for finance content
-        input=full_text,
-        speed=1.05,
+    audio = elevenlabs_client.text_to_speech.convert(
+        voice_id="pNInz6obpgDQGcFmaJgB",  # Adam — deep, authoritative
+        text=full_text,
+        model_id="eleven_turbo_v2_5",
+        output_format="mp3_44100_128",
     )
-    response.stream_to_file(str(output_path))
+    with open(output_path, "wb") as f:
+        for chunk in audio:
+            f.write(chunk)
     print(f"[voiceover] Saved to {output_path}")
     return output_path
 
